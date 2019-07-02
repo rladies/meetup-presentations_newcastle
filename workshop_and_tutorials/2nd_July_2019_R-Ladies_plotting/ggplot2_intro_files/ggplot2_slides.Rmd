@@ -1,0 +1,116 @@
+---
+title: "Data Visualisation in R"
+author: "Aoife, Jess, Rike"
+output: ioslides_presentation
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(warning = FALSE, error = F)
+library(gapminder)
+library(tidyverse)
+library(gganimate)
+```
+
+
+## Learning outcomes
+
+- Make different types of plots such as scatter plots, bar plots, histograms, box plots, area plots and density plot
+- Easily make subplots of your data with faceting 
+- Arrange plots in a grid
+- Customise your plots
+
+## How do GDP and life expectancy change over time?
+
+## 
+
+```{r plot, echo = F, fig.height = 3.3, fig.width = 4.2}
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp,  size = pop, colour = continent)) +
+  geom_point(alpha = .7) +
+  facet_wrap(~ continent) +
+  scale_colour_brewer(palette = "Dark2") +
+  scale_size(name = "Population") +
+  guides(colour = "none") +
+  scale_x_log10() +
+  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'Life expectancy') +
+  transition_time(year)
+```
+
+
+## Layers
+
+```ggplot(data = <DATA>, mapping = aes(<MAPPINGS>)) + 
+  <GEOM_FUNCTION>()```
+  
+## Data, x, y
+
+``` {r}
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp))
+```
+
+## Type of plot
+
+``` {r}
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp)) +  
+  geom_point()
+```
+
+## Colour and size
+
+``` {r}
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp,  
+                             colour = continent, size = pop)) +  
+  geom_point()
+```
+
+## Adjusting the colour, size, etc: scales
+
+``` {r fig.height = 4}
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp,  
+                             colour = continent, size = pop)) +  
+  geom_point() +  
+  scale_colour_brewer(palette = "Dark2")
+```
+
+
+
+## Making subplots: facets
+
+``` {r fig.height = 3.7}
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp,  
+                             colour = continent, size = pop)) +  
+  geom_point() +  
+  scale_colour_brewer(palette = "Dark2") +  
+  facet_wrap(~ continent)
+```
+
+## Adjusting the axis titles
+
+``` {r fig.height = 3.5}
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp,  
+                             colour = continent, size = pop)) +  
+  geom_point() +  
+  scale_colour_brewer(palette = "Dark2") +  
+  facet_wrap(~ continent) +  
+  labs(x = "GDP per capita", y = "Life expectancy")
+```
+
+## Adjusting the overall plot look: theme
+
+``` {r fig.height = 3.2}
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp,  
+                             colour = continent, size = pop)) +  
+  geom_point() +  
+  scale_colour_brewer(palette = "Dark2") +  
+  facet_wrap(~ continent) +  
+  labs(x = "GDP per capita", y = "Life expectancy") +
+  theme_classic()
+```
+
+## Useful links/resources
+
+
+There is lots of useful info online on making plots with ggplot2, but this book is a great starting point:
+
+Wickham, H. and Grolemund, G. (2016) R for data science. Free at http://r4ds.had.co.nz/ It was written by the guy who wrote the package ggplot2. 
+
+Another useful book is this one: http://www.cookbook-r.com/Graphs/

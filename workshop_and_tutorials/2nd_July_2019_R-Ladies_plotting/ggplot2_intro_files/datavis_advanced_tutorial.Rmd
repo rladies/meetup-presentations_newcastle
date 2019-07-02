@@ -1,0 +1,113 @@
+---
+title: "datavis_advanced_tutorial"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# A completely custom ggplot2 theme
+
+You can make customised plots by changing the theme. This will not change how the data are displayed, but how the plot itself looks. It is useful if you want all plots in your work to have the same look.
+
+
+Here is an example of a customised plot, with annotation for the code:
+
+```{r}
+ggplot(data = iris, aes(x = Sepal.Length, y = Petal.Length)) +
+  geom_point() +
+  facet_wrap( ~ Species) +
+  scale_colour_gradient(low = "green", high = "blue", name = "Petal width") +
+  # this is similar to a plot we made earlier
+  
+  theme(
+  text = element_text(size = 14),
+  # this changes the font size to 14
+  
+  axis.text = element_text(angle = 30, size = rel(0.8)),
+  # this changes the angle of the axis labels (often useful for bar plots), 
+  # and makes the font slightly smaller than the rest of the plot
+  
+  axis.ticks = element_line(colour = "black"),
+  
+  plot.background = element_rect(fill = "white"),
+  #this is the colour behind the plot
+  
+  panel.background = element_rect(fill = "mintcream"),
+  # this is the colour inside the plots
+  
+  panel.border = element_rect(fill = NA, colour = "black"),
+  
+  panel.grid.major = element_line(colour = "lightskyblue3", size = .1),
+  
+  panel.grid.minor = element_line(colour = "mintcream"),
+  # the minor grid lines - same colour as each panel
+  
+  strip.background = element_rect(
+  fill = "lightskyblue2",
+  colour = "black",
+  size = 0.5))
+  #this refers to the box with the heading above each facet
+```
+
+**Exercise: make a nice looking theme which you cna use for your own work**
+
+# Making world maps in R (Chloropleth maps)
+
+You will need the packages `rworldmap` and `ggplot2`. We will plot some `gapminder` data, so will need that package too:
+
+```{r }
+library(rworldmap)
+library(tidyverse)
+library(gapminder)
+```
+
+## Load map data
+
+This function will give you the data for plotting each country:
+
+```{r }
+map.all <- map_data(map="world")
+head(map.all) ## region denotes the country
+```
+
+## Get your own data in order
+
+Your data need to match the country names in `map.all`. This is probably what will take you longest to sort out, but we will use some good enough data today:
+
+
+```{r message = FALSE, warning = FALSE}
+
+head(gapminder) ## This is the gapminder dataset
+gapminder <- rename(gapminder, region = country) ## we need to rename country to region, so we can merge gapminder and map.all
+```
+
+## Merge datasets
+
+Then merge the two dataframes `map.all` and `all`:
+```{r }
+map.all <- left_join(map.all, gapminder, by = "region") 
+head(map.all)
+
+```
+
+## Now you can make the plot:
+
+```{r}
+ggplot() + geom_map(data = map.all, map = map.all, 
+                    aes(map_id = region, x = long, y = lat, fill = pop)) + 
+                                              ## map_id is the variable name of the countries,
+                                              ## fill will colour in each country. 
+                                              ## Use colour = varname to change colour of the outline
+  scale_fill_gradientn(colours=terrain.colors(5)) +  
+                                             ## this will change the colours in the gradient
+  labs(fill = "Population size") +           ## changes the name of the legend
+  theme_classic() +                          ## change the overall look of the plot
+  theme(panel.background = element_rect(colour = "black", fill = "NA"), 
+        axis.ticks.length = unit(.05, "cm"), 
+        text = element_text(size = 16.5))     ## change some more of the defaults
+```
+
+**Exercise: using the ggplot2 cheatsheet, can you change the colour gradient using some of the inbuilt colour schemes?**
+
