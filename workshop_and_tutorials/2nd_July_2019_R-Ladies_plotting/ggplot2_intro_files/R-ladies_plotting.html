@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Getting started with data viz</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Rike, Aoife, Jess" />
+    <link href="libs/remark-css/rladies-fonts.css" rel="stylesheet" />
+    <link href="libs/remark-css/rladies.css" rel="stylesheet" />
+    <script src="libs/htmlwidgets/htmlwidgets.js"></script>
+    <script src="libs/plotly-binding/plotly.js"></script>
+    <script src="libs/typedarray/typedarray.min.js"></script>
+    <script src="libs/jquery/jquery.min.js"></script>
+    <link href="libs/crosstalk/css/crosstalk.css" rel="stylesheet" />
+    <script src="libs/crosstalk/js/crosstalk.min.js"></script>
+    <link href="libs/plotly-htmlwidgets-css/plotly-htmlwidgets.css" rel="stylesheet" />
+    <script src="libs/plotly-main/plotly-latest.min.js"></script>
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Getting started with data viz
+## How to make beautiful plots with ggplot2
+### Rike, Aoife, Jess
+### R Ladies
+### 2016/12/12 (updated: 2019-07-02)
+
+---
+
+
+
+
+
+
+
+
+## Learning outcomes
+
+- Make different types of plots such as scatter plots, bar plots, histograms, box plots, area plots and density plot
+- Easily make subplots of your data with faceting 
+- Arrange plots in a grid
+- Customise your plots
+
+---
+## How do GDP and life expectancy change over time?
+
+![](R-ladies_plotting_files/figure-html/plot-1.gif)&lt;!-- --&gt;
+
+---
+## Layers
+Just like Ogres and onions, ggplots have layers. 
+
+Simple plots have only a few layers and as we build more layers the plots get more complex...  
+
+
+```r
+ggplot(data = &lt;DATA&gt;, mapping = aes(&lt;MAPPINGS&gt;)) + 
+  &lt;GEOM_FUNCTION&gt;()
+```
+
+&lt;iframe src="https://giphy.com/embed/kwafZfFxw8WnC" width="480" height="255" frameBorder="0" class="giphy-embed" allowFullScreen&gt;&lt;/iframe&gt;&lt;p&gt;&lt;a href="https://giphy.com/gifs/shrek-kwafZfFxw8WnC"&gt;via GIPHY&lt;/a&gt;&lt;/p&gt;
+
+---
+## Data, x, y
+
+
+
+```r
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp))
+```
+
+![](R-ladies_plotting_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+---
+## Type of plot
+
+
+```r
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp)) +  
+  geom_point()
+```
+
+![](R-ladies_plotting_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+---
+## Colour and size
+
+
+```r
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp,  
+                             colour = continent, size = pop)) +  
+  geom_point()
+```
+
+![](R-ladies_plotting_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+---
+## Adjusting the colour, size, etc: scales
+
+
+```r
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp,  
+                             colour = continent, size = pop)) +  
+  geom_point() +  
+  scale_colour_brewer(palette = "Dark2")
+```
+
+![](R-ladies_plotting_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+
+---
+## Making subplots: facets
+
+
+```r
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp,  
+                             colour = continent, size = pop)) +  
+  geom_point() +  
+  scale_colour_brewer(palette = "Dark2") +  
+  facet_wrap(~ continent)
+```
+
+![](R-ladies_plotting_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+---
+## Adjusting the axis titles
+
+
+```r
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp,  
+                             colour = continent, size = pop)) +  
+  geom_point() +  
+  scale_colour_brewer(palette = "Dark2") +  
+  facet_wrap(~ continent) +  
+  labs(x = "GDP per capita", y = "Life expectancy")
+```
+
+![](R-ladies_plotting_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+---
+## Adjusting the overall plot look: theme
+
+
+```r
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp,  
+                             colour = continent, size = pop)) +  
+  geom_point() +  
+  scale_colour_brewer(palette = "Dark2") +  
+  facet_wrap(~ continent) +  
+  labs(x = "GDP per capita", y = "Life expectancy") +
+  theme_classic()
+```
+
+![](R-ladies_plotting_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+
+
+---
+# Accessibility for colour blind people
+
+
+
+```r
+p &lt;- ggplot(mtcars) + geom_point(aes(x = wt, y = mpg,
+         colour = factor(gear)))
+
+p + theme_igray() + scale_colour_colorblind()
+```
+
+&lt;img src="R-ladies_plotting_files/figure-html/unnamed-chunk-10-1.png" width="350" /&gt;
+---
+# Stata theme
+
+```r
+ToothGrowth$dose &lt;- as.factor(ToothGrowth$dose)
+bxp &lt;- ggplot(ToothGrowth, aes(x = dose, y = len)) +
+  geom_boxplot(aes(fill = dose))
+
+bxp + theme_stata() + scale_fill_stata()
+```
+
+&lt;img src="R-ladies_plotting_files/figure-html/unnamed-chunk-11-1.png" width="350" /&gt;
+
+---
+
+# Economist theme
+
+
+
+
+```r
+    ## Standard
+    p + theme_economist() + scale_colour_economist()
+```
+
+&lt;img src="R-ladies_plotting_files/figure-html/unnamed-chunk-13-1.png" width="350" /&gt;
+
+---
+# Excel theme
+
+```r
+p &lt;- ggplot(mtcars) +
+         geom_point(aes(x = wt, y = mpg, colour = factor(gear))) +
+         facet_wrap(~am)
+    p + theme_excel_new() + scale_colour_excel_new()
+```
+
+&lt;img src="R-ladies_plotting_files/figure-html/excel theme-1.png" width="350" /&gt;
+
+---
+# Govstyle theme
+Graphs in official statistics have to look a certain way. We need to ensure they meet the Government Statistical Service standards.
+![](figure1d.png)
+
+---
+## Plotly package for interactive plots
+
+
+&lt;iframe src="https://giphy.com/embed/hdCGbAPTVbxTi" width="480" height="270" frameBorder="0" class="giphy-embed" allowFullScreen&gt;&lt;/iframe&gt;&lt;p&gt;&lt;a href="https://giphy.com/gifs/reaction-friends-excited-hdCGbAPTVbxTi"&gt;via GIPHY&lt;/a&gt;&lt;/p&gt;
+
+---
+## Start by loading the packages 
+
+
+```r
+# this is where the starwars dataset lives 
+library(dplyr)
+#this is what we plot with 
+library(ggplot2)
+# this makes our plots interactive
+library(plotly)
+```
+
+We are going to use the starwars dataset here so lets see what it looks like 
+
+
+```r
+head(starwars)
+```
+
+```
+## # A tibble: 6 x 13
+##   name  height  mass hair_color skin_color eye_color birth_year gender
+##   &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; 
+## 1 Luke…    172    77 blond      fair       blue            19   male  
+## 2 C-3PO    167    75 &lt;NA&gt;       gold       yellow         112   &lt;NA&gt;  
+## 3 R2-D2     96    32 &lt;NA&gt;       white, bl… red             33   &lt;NA&gt;  
+## 4 Dart…    202   136 none       white      yellow          41.9 male  
+## 5 Leia…    150    49 brown      light      brown           19   female
+## 6 Owen…    178   120 brown, gr… light      blue            52   male  
+## # … with 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+## #   vehicles &lt;list&gt;, starships &lt;list&gt;
+```
+
+---
+## Make a simple plot 
+
+```r
+ ggplot(data = starwars)+
+                   geom_point(aes(x = height, y = mass, colour = gender))
+```
+
+![](R-ladies_plotting_files/figure-html/first starwars plot-1.png)&lt;!-- --&gt;
+
+---
+## Plotly that plot
+
+```r
+starwars_plot &lt;-  ggplot(data = starwars)+
+                   geom_point(aes(x = height, y = mass, colour = gender, 
+                                  label = name))
+
+ggplotly(starwars_plot)
+```
+
+<div id="htmlwidget-0f35b6739ae0f54a7ba0" style="width:504px;height:360px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-0f35b6739ae0f54a7ba0">{"x":{"data":[{"x":[150,165,150,163,178,184,157,170,166,165,168,213,167,96,178,178,null,null,165],"y":[49,75,null,null,55,50,null,56.2,50,null,55,null,null,null,57,48,null,null,45],"text":["height: 150<br />mass:   49.0<br />gender: female<br />name: Leia Organa","height: 165<br />mass:   75.0<br />gender: female<br />name: Beru Whitesun lars","height: 150<br />mass:     NA<br />gender: female<br />name: Mon Mothma","height: 163<br />mass:     NA<br />gender: female<br />name: Shmi Skywalker","height: 178<br />mass:   55.0<br />gender: female<br />name: Ayla Secura","height: 184<br />mass:   50.0<br />gender: female<br />name: Adi Gallia","height: 157<br />mass:     NA<br />gender: female<br />name: Cordé","height: 170<br />mass:   56.2<br />gender: female<br />name: Luminara Unduli","height: 166<br />mass:   50.0<br />gender: female<br />name: Barriss Offee","height: 165<br />mass:     NA<br />gender: female<br />name: Dormé","height: 168<br />mass:   55.0<br />gender: female<br />name: Zam Wesell","height: 213<br />mass:     NA<br />gender: female<br />name: Taun We","height: 167<br />mass:     NA<br />gender: female<br />name: Jocasta Nu","height:  96<br />mass:     NA<br />gender: female<br />name: R4-P17","height: 178<br />mass:   57.0<br />gender: female<br />name: Shaak Ti","height: 178<br />mass:   48.0<br />gender: female<br />name: Sly Moore","height:  NA<br />mass:     NA<br />gender: female<br />name: Rey","height:  NA<br />mass:     NA<br />gender: female<br />name: Captain Phasma","height: 165<br />mass:   45.0<br />gender: female<br />name: Padmé Amidala"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(248,118,109,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(248,118,109,1)"}},"hoveron":"points","name":"female","legendgroup":"female","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[175],"y":[1358],"text":"height: 175<br />mass: 1358.0<br />gender: hermaphrodite<br />name: Jabba Desilijic Tiure","type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(124,174,0,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(124,174,0,1)"}},"hoveron":"points","name":"hermaphrodite","legendgroup":"hermaphrodite","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[172,202,178,183,182,188,180,228,180,173,170,180,66,170,183,190,177,175,180,null,88,160,193,191,170,196,224,206,183,137,112,183,175,180,94,122,163,188,198,196,171,188,264,188,196,185,183,183,193,191,183,198,229,79,193,191,216,234,188,206,null,null],"y":[77,136,120,84,77,84,null,112,80,74,77,110,17,75,78.2,113,79,79,83,null,20,68,89,90,null,66,82,null,null,null,40,null,80,null,45,null,65,84,82,87,null,null,null,80,null,85,null,80,80,null,79,102,88,15,48,null,159,136,79,80,null,null],"text":["height: 172<br />mass:   77.0<br />gender: male<br />name: Luke Skywalker","height: 202<br />mass:  136.0<br />gender: male<br />name: Darth Vader","height: 178<br />mass:  120.0<br />gender: male<br />name: Owen Lars","height: 183<br />mass:   84.0<br />gender: male<br />name: Biggs Darklighter","height: 182<br />mass:   77.0<br />gender: male<br />name: Obi-Wan Kenobi","height: 188<br />mass:   84.0<br />gender: male<br />name: Anakin Skywalker","height: 180<br />mass:     NA<br />gender: male<br />name: Wilhuff Tarkin","height: 228<br />mass:  112.0<br />gender: male<br />name: Chewbacca","height: 180<br />mass:   80.0<br />gender: male<br />name: Han Solo","height: 173<br />mass:   74.0<br />gender: male<br />name: Greedo","height: 170<br />mass:   77.0<br />gender: male<br />name: Wedge Antilles","height: 180<br />mass:  110.0<br />gender: male<br />name: Jek Tono Porkins","height:  66<br />mass:   17.0<br />gender: male<br />name: Yoda","height: 170<br />mass:   75.0<br />gender: male<br />name: Palpatine","height: 183<br />mass:   78.2<br />gender: male<br />name: Boba Fett","height: 190<br />mass:  113.0<br />gender: male<br />name: Bossk","height: 177<br />mass:   79.0<br />gender: male<br />name: Lando Calrissian","height: 175<br />mass:   79.0<br />gender: male<br />name: Lobot","height: 180<br />mass:   83.0<br />gender: male<br />name: Ackbar","height:  NA<br />mass:     NA<br />gender: male<br />name: Arvel Crynyd","height:  88<br />mass:   20.0<br />gender: male<br />name: Wicket Systri Warrick","height: 160<br />mass:   68.0<br />gender: male<br />name: Nien Nunb","height: 193<br />mass:   89.0<br />gender: male<br />name: Qui-Gon Jinn","height: 191<br />mass:   90.0<br />gender: male<br />name: Nute Gunray","height: 170<br />mass:     NA<br />gender: male<br />name: Finis Valorum","height: 196<br />mass:   66.0<br />gender: male<br />name: Jar Jar Binks","height: 224<br />mass:   82.0<br />gender: male<br />name: Roos Tarpals","height: 206<br />mass:     NA<br />gender: male<br />name: Rugor Nass","height: 183<br />mass:     NA<br />gender: male<br />name: Ric Olié","height: 137<br />mass:     NA<br />gender: male<br />name: Watto","height: 112<br />mass:   40.0<br />gender: male<br />name: Sebulba","height: 183<br />mass:     NA<br />gender: male<br />name: Quarsh Panaka","height: 175<br />mass:   80.0<br />gender: male<br />name: Darth Maul","height: 180<br />mass:     NA<br />gender: male<br />name: Bib Fortuna","height:  94<br />mass:   45.0<br />gender: male<br />name: Dud Bolt","height: 122<br />mass:     NA<br />gender: male<br />name: Gasgano","height: 163<br />mass:   65.0<br />gender: male<br />name: Ben Quadinaros","height: 188<br />mass:   84.0<br />gender: male<br />name: Mace Windu","height: 198<br />mass:   82.0<br />gender: male<br />name: Ki-Adi-Mundi","height: 196<br />mass:   87.0<br />gender: male<br />name: Kit Fisto","height: 171<br />mass:     NA<br />gender: male<br />name: Eeth Koth","height: 188<br />mass:     NA<br />gender: male<br />name: Saesee Tiin","height: 264<br />mass:     NA<br />gender: male<br />name: Yarael Poof","height: 188<br />mass:   80.0<br />gender: male<br />name: Plo Koon","height: 196<br />mass:     NA<br />gender: male<br />name: Mas Amedda","height: 185<br />mass:   85.0<br />gender: male<br />name: Gregar Typho","height: 183<br />mass:     NA<br />gender: male<br />name: Cliegg Lars","height: 183<br />mass:   80.0<br />gender: male<br />name: Poggle the Lesser","height: 193<br />mass:   80.0<br />gender: male<br />name: Dooku","height: 191<br />mass:     NA<br />gender: male<br />name: Bail Prestor Organa","height: 183<br />mass:   79.0<br />gender: male<br />name: Jango Fett","height: 198<br />mass:  102.0<br />gender: male<br />name: Dexter Jettster","height: 229<br />mass:   88.0<br />gender: male<br />name: Lama Su","height:  79<br />mass:   15.0<br />gender: male<br />name: Ratts Tyerell","height: 193<br />mass:   48.0<br />gender: male<br />name: Wat Tambor","height: 191<br />mass:     NA<br />gender: male<br />name: San Hill","height: 216<br />mass:  159.0<br />gender: male<br />name: Grievous","height: 234<br />mass:  136.0<br />gender: male<br />name: Tarfful","height: 188<br />mass:   79.0<br />gender: male<br />name: Raymus Antilles","height: 206<br />mass:   80.0<br />gender: male<br />name: Tion Medon","height:  NA<br />mass:     NA<br />gender: male<br />name: Finn","height:  NA<br />mass:     NA<br />gender: male<br />name: Poe Dameron"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,191,196,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(0,191,196,1)"}},"hoveron":"points","name":"male","legendgroup":"male","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[200,null],"y":[140,null],"text":["height: 200<br />mass:  140.0<br />gender: none<br />name: IG-88","height:  NA<br />mass:     NA<br />gender: none<br />name: BB8"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(199,124,255,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(199,124,255,1)"}},"hoveron":"points","name":"none","legendgroup":"none","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[167,96,97],"y":[75,32,32],"text":["height: 167<br />mass:   75.0<br />gender: NA<br />name: C-3PO","height:  96<br />mass:   32.0<br />gender: NA<br />name: R2-D2","height:  97<br />mass:   32.0<br />gender: NA<br />name: R5-D4"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(127,127,127,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(127,127,127,1)"}},"hoveron":"points","name":"NA","legendgroup":"NA","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.2283105022831,"r":7.30593607305936,"b":40.1826484018265,"l":48.9497716894977},"plot_bgcolor":"rgba(235,235,235,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[56.1,273.9],"tickmode":"array","ticktext":["100","150","200","250"],"tickvals":[100,150,200,250],"categoryorder":"array","categoryarray":["100","150","200","250"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"y","title":{"text":"height","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-52.15,1425.15],"tickmode":"array","ticktext":["0","500","1000"],"tickvals":[0,500,1000],"categoryorder":"array","categoryarray":["0","500","1000"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"x","title":{"text":"mass","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":true,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895},"y":0.913385826771654},"annotations":[{"text":"gender","x":1.02,"y":1,"showarrow":false,"ax":0,"ay":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xref":"paper","yref":"paper","textangle":-0,"xanchor":"left","yanchor":"bottom","legendTitle":true}],"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","showSendToCloud":false},"source":"A","attrs":{"10b88ad7708":{"x":{},"y":{},"colour":{},"label":{},"type":"scatter"}},"cur_data":"10b88ad7708","visdat":{"10b88ad7708":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+
+---
+## Use plotly instead of a legend
+
+```r
+starwars2 &lt;- starwars %&gt;% 
+  ggplot(data = .,)+
+  geom_bar(aes(x = gender, fill = eye_color))+
+   theme(legend.position="none")
+ggplotly(starwars2)
+```
+
+<div id="htmlwidget-3c3c002f3e6c49a2e782" style="width:504px;height:360px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-3c3c002f3e6c49a2e782">{"x":{"data":[{"orientation":"v","width":[0.9,0.9,0.9],"base":[17,55,1],"x":[1,3,4],"y":[2,7,1],"text":["gender: female<br />eye_color: black<br />count:  2","gender: male<br />eye_color: black<br />count:  7","gender: none<br />eye_color: black<br />count:  1"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(248,118,109,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"black","legendgroup":"black","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.9,0.9],"base":[11,42],"x":[1,3],"y":[6,13],"text":["gender: female<br />eye_color: blue<br />count:  6","gender: male<br />eye_color: blue<br />count: 13"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(229,135,0,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"blue","legendgroup":"blue","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.9,"base":41,"x":[3],"y":[1],"text":"gender: male<br />eye_color: blue-gray<br />count:  1","type":"bar","marker":{"autocolorscale":false,"color":"rgba(201,152,0,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"blue-gray","legendgroup":"blue-gray","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.9,0.9],"base":[6,25],"x":[1,3],"y":[5,16],"text":["gender: female<br />eye_color: brown<br />count:  5","gender: male<br />eye_color: brown<br />count: 16"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(163,165,0,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"brown","legendgroup":"brown","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.9,"base":24,"x":[3],"y":[1],"text":"gender: male<br />eye_color: dark<br />count:  1","type":"bar","marker":{"autocolorscale":false,"color":"rgba(107,177,0,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"dark","legendgroup":"dark","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.9,"base":23,"x":[3],"y":[1],"text":"gender: male<br />eye_color: gold<br />count:  1","type":"bar","marker":{"autocolorscale":false,"color":"rgba(0,186,56,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"gold","legendgroup":"gold","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.9,"base":22,"x":[3],"y":[1],"text":"gender: male<br />eye_color: green, yellow<br />count:  1","type":"bar","marker":{"autocolorscale":false,"color":"rgba(0,191,125,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"green, yellow","legendgroup":"green, yellow","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.9,0.9],"base":[4,21],"x":[1,3],"y":[2,1],"text":["gender: female<br />eye_color: hazel<br />count:  2","gender: male<br />eye_color: hazel<br />count:  1"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(0,192,175,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"hazel","legendgroup":"hazel","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.9,0.9],"base":[0,14],"x":[2,3],"y":[1,7],"text":["gender: hermaphrodite<br />eye_color: orange<br />count:  1","gender: male<br />eye_color: orange<br />count:  7"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(0,188,216,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"orange","legendgroup":"orange","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.9,"base":13,"x":[3],"y":[1],"text":"gender: male<br />eye_color: pink<br />count:  1","type":"bar","marker":{"autocolorscale":false,"color":"rgba(0,176,246,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"pink","legendgroup":"pink","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.9,0.9,0.9],"base":[11,0,1],"x":[3,4,5],"y":[2,1,2],"text":["gender: male<br />eye_color: red<br />count:  2","gender: none<br />eye_color: red<br />count:  1","gender: NA<br />eye_color: red<br />count:  2"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(97,156,255,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"red","legendgroup":"red","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.9,"base":3,"x":[1],"y":[1],"text":"gender: female<br />eye_color: red, blue<br />count:  1","type":"bar","marker":{"autocolorscale":false,"color":"rgba(185,131,255,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"red, blue","legendgroup":"red, blue","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.9,0.9],"base":[2,9],"x":[1,3],"y":[1,2],"text":["gender: female<br />eye_color: unknown<br />count:  1","gender: male<br />eye_color: unknown<br />count:  2"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(231,107,243,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"unknown","legendgroup":"unknown","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.9,"base":1,"x":[1],"y":[1],"text":"gender: female<br />eye_color: white<br />count:  1","type":"bar","marker":{"autocolorscale":false,"color":"rgba(253,97,209,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"white","legendgroup":"white","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.9,0.9,0.9],"base":[0,0,0],"x":[1,3,5],"y":[1,9,1],"text":["gender: female<br />eye_color: yellow<br />count:  1","gender: male<br />eye_color: yellow<br />count:  9","gender: NA<br />eye_color: yellow<br />count:  1"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(255,103,164,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"yellow","legendgroup":"yellow","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.2283105022831,"r":7.30593607305936,"b":40.1826484018265,"l":37.2602739726027},"plot_bgcolor":"rgba(235,235,235,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.4,5.6],"tickmode":"array","ticktext":["female","hermaphrodite","male","none",null],"tickvals":[1,2,3,4,5],"categoryorder":"array","categoryarray":["female","hermaphrodite","male","none",null],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"y","title":{"text":"gender","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-3.1,65.1],"tickmode":"array","ticktext":["0","20","40","60"],"tickvals":[0,20,40,60],"categoryorder":"array","categoryarray":["0","20","40","60"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"x","title":{"text":"count","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","showSendToCloud":false},"source":"A","attrs":{"10b8facd984":{"x":{},"fill":{},"type":"bar"}},"cur_data":"10b8facd984","visdat":{"10b8facd984":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+
+
+---
+## EmoGG
+
+
+```r
+#devtools::install_github("dill/emoGG")
+library(emoGG)
+
+ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) +
+  geom_emoji(emoji="1f337")
+```
+
+![](R-ladies_plotting_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+
+---
+## Useful links/resources
+
+
+There is lots of useful info online on making plots with ggplot2, but this book is a great starting point:
+
+Wickham, H. and Grolemund, G. (2016) R for data science. Free at http://r4ds.had.co.nz/ It was written by the guy who wrote the package ggplot2. 
+
+Another useful book is this one: http://www.cookbook-r.com/Graphs/
+
+The evolution of a ggplot: 
+
+https://cedricscherer.netlify.com/2019/05/17/the-evolution-of-a-ggplot-ep.-1/
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

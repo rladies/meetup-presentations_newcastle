@@ -1,0 +1,68 @@
+---
+title: "hack_data"
+author: "Susannah Cowtan"
+date: "1 July 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r libraries}
+library(readr)
+library(dplyr)
+library(stringr)
+```
+
+
+```{r globals}
+# Focal species
+species <- "Hermania scabra"
+# Dataset
+dataset_id <- "2462ab76-f01f-4c2c-bf00-1cae962f386a"
+
+# Data file locations
+filepath = "../../talk_data/"
+intpath = "../../int_data/"
+
+# Restrictions
+min_year <- 1880
+# Within the rectangle containing the Kattegat
+lat_minmax <- c(54.75, 57.95)
+long_minmax <- c(9.90, 12.85)
+```
+
+```{r generate_filenames}
+filename_ds <- paste0(filepath, "shark.csv")
+filename_new <- paste0(filepath, "shark_new.csv")
+```
+
+```{r read_shark, echo=FALSE}
+# cols() guesses wrong if rows at the top are NA
+shark_df <- read_csv(filename_ds, col_types = cols())
+
+```
+
+```{r}
+# Restrictions
+min_year <- 1880
+# Within the rectangle containing the Kattegat
+lat_minmax <- c(54.75, 57.95)
+long_minmax <- c(9.90, 12.85)
+
+```
+
+
+```{r write}
+shark_df %>%
+  # Remove out of range latitude and longitude values
+  filter(decimalLatitude >= lat_minmax[1] & 
+        decimalLatitude <= lat_minmax[2]) %>%
+  filter(decimalLongitude >= long_minmax[1] & 
+        decimalLongitude <= long_minmax[2]) %>%
+  # Don't include years before min_year
+  filter(year >= min_year) %>%
+  write_csv(filename_new)
+```
+
