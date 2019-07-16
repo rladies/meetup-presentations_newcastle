@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Changing marine populations  in the Kattegat</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Susannah Cowtan (she/her)  Twitter: @SuusJC" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/rladies.css" rel="stylesheet" />
+    <link href="libs/remark-css/rladies-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Changing marine populations <br>in the Kattegat
+## Or, I found this tool, <br>but it doesn’t quite do what I want
+### Susannah Cowtan (she/her) <br>Twitter: <span class="citation">@SuusJC</span>
+### R-Ladies Newcastle
+### 2nd July 2019
+
+---
+
+
+class: inverse, center, middle
+
+# In the where?
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# The Kattegat
+
+.pull-left[
+&lt;div class="figure"&gt;
+&lt;img src="./Cowtan_RLadies_Newcastle_20190702-figure/catflap.png" alt="A narrow passage that only a cat will fit through?" width="632" /&gt;
+&lt;p class="caption"&gt;A narrow passage that only a cat will fit through?&lt;/p&gt;
+&lt;/div&gt;
+]
+
+--
+
+.pull-right[
+&lt;div class="figure"&gt;
+&lt;img src="./Cowtan_RLadies_Newcastle_20190702-figure/Kattegat_map.png" alt="A sea between Denmark and Sweden" width="593" /&gt;
+&lt;p class="caption"&gt;A sea between Denmark and Sweden&lt;/p&gt;
+&lt;/div&gt;
+]
+
+---
+
+# Where's my data from?
+
+&lt;img src="./Cowtan_RLadies_Newcastle_20190702-figure/obis_logo.png" width="791" height="100" /&gt;
+
+https://www.obis.org/
+
+
+.left-column[
+&lt;img src="./Cowtan_RLadies_Newcastle_20190702-figure/nell_shark_crop.png" width="3253" /&gt;
+]
+
+.right-column[
+&gt; OBIS is a global open-access data and information clearing-house on marine biodiversity for science, conservation and sustainable development
+
+&lt;br&gt;
+
+From this giant metadataset, I'm using just one set:
+
+[SHARK](https://www.obis.org/dataset/2462ab76-f01f-4c2c-bf00-1cae962f386a) - 
+Marine soft bottom macrozoobenthos monitoring in Sweden since 1971
+]
+---
+
+# How do I get the data?
+
+OBIS have their own R package,
+[robis](https://cran.r-project.org/web/packages/robis/index.html), on CRAN.
+
+To download data for one species, use:
+
+
+```r
+# Downloads all data about my species, as a tibble
+species_df &lt;- robis::occurrence(scientificname = "Hermania scabra") 
+```
+
+I want to download the 
+[SHARK](https://www.obis.org/dataset/2462ab76-f01f-4c2c-bf00-1cae962f386a) 
+dataset. The dataset IDs are rather ugly!
+
+
+```r
+# Baby SHARK do do do
+shark_df &lt;- robis::occurrence(
+  datasetid = "2462ab76-f01f-4c2c-bf00-1cae962f386a")
+```
+
+---
+class: inverse, center, middle
+
+# Setting up ggplot2
+
+---
+
+# Defining a theme and some colours
+
+
+```r
+# Custom colours (colourblind friendly) -
+# Pick widely spaced range, and omit colours nearest black and white
+prof_colours &lt;- scales::viridis_pal(option = "viridis")(8)[c(2, 5, 7)]
+# Nice and contrasty (for a colour vision person - should really check R/G vis)
+highlight_colour &lt;- "violetred3"
+
+# Look of ggplot
+theme_prof &lt;- function (base_size = 30, base_family = "") {
+  theme_bw(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.text = element_text(size = 28),
+      axis.title = element_text(size = 32),
+      axis.title.x = element_text(margin = margin(t = 8)),
+      axis.title.y = element_text(margin = margin(l = 0, r = 12),
+        angle = 90),
+      legend.text = element_text(size = 24),
+      legend.title = element_text(size = 28)
+    )
+}
+# Set theme
+theme_set(theme_prof())
+```
+
+---
+
+class: inverse, center, middle
+
+# Let's explore the data
+
+---
+
+# Presence records
+
+- 92 columns! 
+
+- Lots and lots of missing data
+
+- I mostly work with:
+
+  - Species name
+  
+  - Observation date and time
+  
+  - Latitude and longitude
+
+---
+
+# Species count by year
+
+
+```r
+shark_df %&gt;%
+  # Just one instance of each species per year
+  dplyr::select(scientificName, year) %&gt;%
+  unique() %&gt;%
+  # Histogram of species count by year
+  ggplot(aes(x = year)) +
+    geom_histogram(binwidth = 1, fill = prof_colours[2], col = "lightgrey") +
+    labs(x = "Year", y = "Number of species")
+```
+
+![Species count by year for the Kattegat region in the SHARK dataset, showing a decline around 1992](Cowtan_RLadies_Newcastle_20190702_files/figure-html/no_species-1.png)
+
+---
+
+class: inverse, center, middle
+
+# Fun with missing data
+
+---
+
+# Classify as before/after the end of 1992 
+
+
+```r
+target_year &lt;- 1992
+
+## Pre &amp; post target_year
+shark_gg_df &lt;- shark_df %&gt;%
+  # Up to and including target year or after?
+  mutate(pre_post = ifelse(year &gt; target_year, "post", "pre")) %&gt;%
+  # Only need these columns
+  select(scientificName, pre_post)
+```
+
+
+```
+## # A tibble: 3 x 2
+##   scientificName         pre_post
+##   &lt;chr&gt;                  &lt;chr&gt;   
+## 1 Echinocardium cordatum post    
+## 2 Levinsenia gracilis    pre     
+## 3 Artacama proboscidea   post
+```
+
+---
+
+# Count records by before/after the end of 1992
+
+
+```r
+shark_gg_df &lt;- shark_gg_df %&gt;%
+  # Group the data by pre or post target_year
+  group_by(pre_post) %&gt;%
+    # Count the number of records for each species (puts in column n)
+    count(scientificName) %&gt;%
+  ungroup() 
+```
+
+
+```
+## # A tibble: 3 x 3
+##   pre_post scientificName           n
+##   &lt;chr&gt;    &lt;chr&gt;                &lt;int&gt;
+## 1 post     Abietinaria abietina     2
+## 2 post     Abra alba              465
+## 3 post     Abra nitida           1024
+```
+
+```
+## # A tibble: 3 x 3
+##   pre_post scientificName           n
+##   &lt;chr&gt;    &lt;chr&gt;                &lt;int&gt;
+## 1 pre      Vitreolina philippi      4
+## 2 pre      Westwoodilla caecula   124
+## 3 pre      Yoldiella lucida         1
+```
+
+---
+
+# Make into "wide" format for ggplot
+
+
+```r
+shark_gg_df &lt;- shark_gg_df %&gt;%
+  # Columns scientificName, pre (count), post(count)
+  spread(pre_post, n)
+```
+
+
+```
+## # A tibble: 3 x 3
+##   scientificName        post   pre
+##   &lt;chr&gt;                &lt;int&gt; &lt;int&gt;
+## 1 Abietinaria abietina     2    NA
+## 2 Abra alba              465    34
+## 3 Abra nitida           1024   251
+```
+
+---
+
+# Approximate slope for comparison line
+
+Not at all accurate! Survey effort varied a lot by year.
+
+
+```r
+# Calculate slope of comparison line by how many years either side of target_year
+# (approximation - takes no account of survey effort)
+slope &lt;- length(which(unique(shark_df$year) &gt; target_year)) / 
+  length(which(unique(shark_df$year) &lt;= target_year))
+```
+
+---
+
+# Comparing number of records pre and post end 1992
+
+
+```r
+shark_scatter_gg &lt;- shark_gg_df %&gt;%
+  ggplot(aes(x = pre, y = post)) +
+    # Comparison line to show equality of observations given the number of years
+    geom_abline(slope = slope, intercept = 0, col = "grey75", size = 1) +
+    # Scatterplot of data
+    geom_point(alpha = 0.5, col = prof_colours[2]) +
+    # Human-readable axis labels
+    labs(x = paste("Number of observations pre", target_year),
+         y = paste("Number of observations from", target_year, "on"))
+```
+
+---
+
+# What don't we see?
+
+
+```
+## Warning: Removed 285 rows containing missing values (geom_point).
+```
+
+![](Cowtan_RLadies_Newcastle_20190702_files/figure-html/scatterplot-1.png)&lt;!-- --&gt;
+
+---
+
+# So I found this tool 
+
+
+```r
+shark_missing_gg &lt;- shark_gg_df %&gt;%
+  ggplot(aes(x = pre, y = post)) +
+    # Comparison line to show equality of observations given the number of years
+    geom_abline(slope = slope, intercept = 0, col = "grey75", size = 1.5) +
+    # Scatterplot of data
+*   naniar::geom_miss_point(alpha = 0.5, size = 3) +
+    # Set my own discrete colour scheme
+*   scale_colour_manual(values = prof_colours,
+*                        # Change legend header
+*                        guide = guide_legend("Presence"),
+*                        # Change key labels from "Not missing" and "Missing"
+*                        labels = c("Absent", "Present")) +
+    # Human-readable axis labels
+    labs(x = paste("Number of observations pre", target_year),
+         y = paste("Number of observations from", target_year, "on"))
+```
+
+---
+
+# Colonisation and extinction
+
+![](Cowtan_RLadies_Newcastle_20190702_files/figure-html/missingplot-1.png)&lt;!-- --&gt;
+
+---
+
+# Let's label some interesting points
+
+
+
+
+```r
+shark_label_gg &lt;- shark_missing_gg +
+    # Colour my target species
+    # gghighlight doesn't work with geom_miss_point, do it manually
+*   geom_point(data = dplyr::filter(shark_gg_df, scientificName == species), 
+*      col = highlight_colour, size = 3) +
+    # Label all species of interest with ggrepel
+    # ggrepel stops your text labels overlapping
+*   ggrepel::geom_text_repel(data = shark_labels_df,
+*      aes(label = scientificName),
+*      # Avoids ambiguity - moving the labels away from the points means
+*      # it will make a short line from the label to the exact point
+*      nudge_x = 15, nudge_y = 15,
+*      size = 9, segment.size = 0.75, point.padding = 0.75)
+```
+
+---
+
+# Well, darnit
+
+
+```
+## Warning: Removed 3 rows containing missing values (geom_text_repel).
+```
+
+![](Cowtan_RLadies_Newcastle_20190702_files/figure-html/labelfail-1.png)&lt;!-- --&gt;
+
+---
+
+# So this is OK
+
+I can label the points where the species was present throughout:
+
+
+```r
+shark_label_gg &lt;- shark_missing_gg +
+    # Colour my target species
+    geom_point(data = dplyr::filter(shark_gg_df, scientificName == species), 
+      col = highlight_colour, size = 3) +
+    # ggrepel only works for non-missing data; label species of interest
+*   ggrepel::geom_text_repel(data = shark_present_df,
+*      aes(label = scientificName),
+*      # Avoids ambiguity or overlapping with manual labels 
+*      nudge_x = 22, 
+*      nudge_y = ifelse(shark_present_df$scientificName == species, 0, 15), 
+*      # Point padding stops lines obscuring points
+*      size = 9, segment.size = 0.75, point.padding = 0.75)
+```
+
+But I still want to label those missing data. How?
+
+---
+
+# Brute force and ignorance
+
+
+```r
+# Manually label species once common but now missing or vice-versa
+for (i in 1:nrow(shark_absent_df)) {
+  # Colonisers
+  if (is.na(shark_absent_df[i,]$pre)) {
+    shark_label_gg &lt;- shark_label_gg +
+      # Add custom annotation at calculated location
+      # Using the length of the string as annotate puts the middle
+      # of the text at the given location
+*     annotate("text", 
+*               x = (nchar(shark_absent_df[i,]$scientificName) * 2) - 12,
+*               y = shark_absent_df[i,]$post + 70,
+*               size = 9,
+*               label = shark_absent_df[i,]$scientificName)
+  } else {
+    # Went extinct
+    shark_label_gg &lt;- shark_label_gg +
+      # Add custom annotation at calculated location
+*     annotate("text", x = shark_absent_df[i,]$pre +
+*               (nchar(shark_absent_df[i,]$scientificName) * 2) + 25, 
+*               y = ifelse(shark_absent_df[i,]$pre &lt; 50, -210, -110), 
+*               size = 9,
+*               label = shark_absent_df[i,]$scientificName) 
+  }
+}
+```
+
+---
+
+# Success! But surely there's a better way?
+
+![](Cowtan_RLadies_Newcastle_20190702_files/figure-html/clunky-1.png)&lt;!-- --&gt;
+
+---
+
+# You're right
+
+Those `NA`s are graphed as though they were negative values.
+
+
+```r
+shark_labels_df &lt;- shark_absent_df %&gt;%
+  # Replace all the NA values in the pre and post columns
+  # This will be a bit approximate because of jitter
+  tidyr::replace_na(list(pre = -35, post = -175)) %&gt;%
+  # Glue all the labels together, because now they will all work with ggrepel
+  bind_rows(shark_present_df)
+```
+
+Now we don't need all that `annotate` stuff.
+
+---
+
+# The better way
+
+I can just add all the labels at once now, and `ggrepel` can take care of where
+they go.
+
+
+```r
+shark_label_gg &lt;- shark_missing_gg +
+    # Colour my target species
+    geom_point(data = dplyr::filter(shark_gg_df, scientificName == species), 
+      col = highlight_colour, size = 3) +
+    # ggrepel only works for non-missing data; label species of interest
+*   ggrepel::geom_text_repel(data = shark_labels_df,
+*      aes(label = scientificName),
+*      # Avoids ambiguity or overlapping with manual labels 
+*      nudge_x = 22, 
+*      nudge_y = 15, 
+*      # Point padding stops lines obscuring points
+*      size = 9, segment.size = 0.75, point.padding = 0.75)
+```
+
+---
+
+# And here we are
+
+![](Cowtan_RLadies_Newcastle_20190702_files/figure-html/final-1.png)&lt;!-- --&gt;
+
+---
+
+# So why did I show you annotate then?
+
+Useful when:
+
+- Only one or two things to add
+
+- Information in vectors not dataframes
+
+- Segments, rectangles and even point ranges as well as text
+
+- You're finicky about position
+
+- If the position is `inside` the axes
+
+&lt;br&gt;
+Not useful for:
+
+- Custom axis ticks (possible, but arcane)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

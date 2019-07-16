@@ -1,0 +1,546 @@
+---
+title: "Changing marine populations <br>in the Kattegat"
+subtitle: "Or, I found this tool, <br>but it doesn't quite do what I want"
+author: "Susannah Cowtan (she/her) <br>Twitter: @SuusJC"
+institute: "R-Ladies Newcastle"
+date: "2nd July 2019"
+output:
+  xaringan::moon_reader:
+    css: [default, rladies, rladies-fonts]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+class: inverse, center, middle
+
+# In the where?
+
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE)
+```
+
+
+```{r packages_slides}
+library(knitr)
+library(png)
+library(jpeg)
+```
+
+```{r slide_globals}
+imagepath <- "./Cowtan_RLadies_Newcastle_20190702-figure/"
+```
+
+
+```{r packages}
+# You will need this in the unlikely event you want to play with these data
+library(robis)
+
+# I am an incorrigible tidyverse programmer.  Sorry not sorry.
+suppressPackageStartupMessages(library(dplyr))
+library(readr)
+suppressPackageStartupMessages(library(tidyr))
+
+# Libraries for graphics
+suppressPackageStartupMessages(library(scales))
+library(ggplot2)
+library(ggrepel)
+library(naniar)
+```
+
+```{r globals}
+# Focal species
+species <- "Hermania scabra"
+# Dataset
+dataset_id <- "2462ab76-f01f-4c2c-bf00-1cae962f386a"
+
+# Data file locations
+filepath = "../../talk_data/"
+intpath = "../../int_data/"
+
+# Restrictions
+min_year <- 1880
+# Within the rectangle containing the Kattegat
+lat_minmax <- c(54.75, 57.95)
+long_minmax <- c(9.90, 12.85)
+```
+
+```{r generate_filenames}
+filename_ds <- paste0(filepath, "shark.csv")
+```
+
+```{r read_shark, echo=FALSE}
+# Don't query OBIS if we don't have to
+if(!file.exists(filename_ds)) {
+  shark_df <- occurrence(datasetid = dataset_id) %>%
+    select(scientificName, year, decimalLatitude, decimalLongitude) %>%
+  # Remove out of range latitude and longitude values
+  filter(decimalLatitude >= lat_minmax[1] & 
+        decimalLatitude <= lat_minmax[2]) %>%
+  filter(decimalLongitude >= long_minmax[1] & 
+        decimalLongitude <= long_minmax[2]) %>%
+  # Don't include years before min_year
+  filter(year >= min_year) 
+  # Save file
+  write_csv(shark_df, filename_ds)
+} else {
+  # cols() guesses wrong if rows at the top are NA
+  shark_df <- read_csv(filename_ds, col_types = cols())
+}
+```
+
+
+# The Kattegat
+
+.pull-left[
+```{r catflap, fig.cap = "A narrow passage that only a cat will fit through?"}
+include_graphics(paste0(imagepath, "catflap.png"))
+```
+]
+
+--
+
+.pull-right[
+```{r kattemap, fig.cap = "A sea between Denmark and Sweden"}
+include_graphics(paste0(imagepath, "Kattegat_map.png"))
+```
+]
+
+---
+
+# Where's my data from?
+
+```{r obis_logo, out.height = 100}
+include_graphics(paste0(imagepath, "obis_logo.png"))
+```
+
+https://www.obis.org/
+
+
+.left-column[
+```{r nell_shark}
+include_graphics(paste0(imagepath, "nell_shark_crop.png"))
+```
+]
+
+.right-column[
+> OBIS is a global open-access data and information clearing-house on marine biodiversity for science, conservation and sustainable development
+
+<br>
+
+From this giant metadataset, I'm using just one set:
+
+[SHARK](https://www.obis.org/dataset/2462ab76-f01f-4c2c-bf00-1cae962f386a) - 
+Marine soft bottom macrozoobenthos monitoring in Sweden since 1971
+]
+---
+
+# How do I get the data?
+
+OBIS have their own R package,
+[robis](https://cran.r-project.org/web/packages/robis/index.html), on CRAN.
+
+To download data for one species, use:
+
+```{r example_get_species, eval = FALSE, echo = TRUE}
+# Downloads all data about my species, as a tibble
+species_df <- robis::occurrence(scientificname = "Hermania scabra") 
+```
+
+I want to download the 
+[SHARK](https://www.obis.org/dataset/2462ab76-f01f-4c2c-bf00-1cae962f386a) 
+dataset. The dataset IDs are rather ugly!
+
+```{r example_get_dataset, eval = FALSE, echo = TRUE}
+# Baby SHARK do do do
+shark_df <- robis::occurrence(
+  datasetid = "2462ab76-f01f-4c2c-bf00-1cae962f386a")
+```
+
+---
+class: inverse, center, middle
+
+# Setting up ggplot2
+
+---
+
+# Defining a theme and some colours
+
+```{r gg_theme, echo = TRUE}
+# Custom colours (colourblind friendly) -
+# Pick widely spaced range, and omit colours nearest black and white
+prof_colours <- scales::viridis_pal(option = "viridis")(8)[c(2, 5, 7)]
+# Nice and contrasty (for a colour vision person - should really check R/G vis)
+highlight_colour <- "violetred3"
+
+# Look of ggplot
+theme_prof <- function (base_size = 30, base_family = "") {
+  theme_bw(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.text = element_text(size = 28),
+      axis.title = element_text(size = 32),
+      axis.title.x = element_text(margin = margin(t = 8)),
+      axis.title.y = element_text(margin = margin(l = 0, r = 12),
+        angle = 90),
+      legend.text = element_text(size = 24),
+      legend.title = element_text(size = 28)
+    )
+}
+# Set theme
+theme_set(theme_prof())
+```
+
+---
+
+class: inverse, center, middle
+
+# Let's explore the data
+
+---
+
+# Presence records
+
+- 92 columns! 
+
+- Lots and lots of missing data
+
+- I mostly work with:
+
+  - Species name
+  
+  - Observation date and time
+  
+  - Latitude and longitude
+
+---
+
+# Species count by year
+
+```{r no_species, fig.height = 6, fig.width = 15, fig.cap = "Species count by year for the Kattegat region in the SHARK dataset, showing a decline around 1992", echo = TRUE}
+shark_df %>%
+  # Just one instance of each species per year
+  dplyr::select(scientificName, year) %>%
+  unique() %>%
+  # Histogram of species count by year
+  ggplot(aes(x = year)) +
+    geom_histogram(binwidth = 1, fill = prof_colours[2], col = "lightgrey") +
+    labs(x = "Year", y = "Number of species")
+```
+
+---
+
+class: inverse, center, middle
+
+# Fun with missing data
+
+---
+
+# Classify as before/after the end of 1992 
+
+```{r pre_post_prep_1, echo=TRUE}
+target_year <- 1992
+
+## Pre & post target_year
+shark_gg_df <- shark_df %>%
+  # Up to and including target year or after?
+  mutate(pre_post = ifelse(year > target_year, "post", "pre")) %>%
+  # Only need these columns
+  select(scientificName, pre_post)
+```
+
+```{r view_1}
+slice(shark_gg_df, c(1, 6, 35))
+```
+
+---
+
+# Count records by before/after the end of 1992
+
+```{r pre_post_prep_2, echo=TRUE}
+shark_gg_df <- shark_gg_df %>%
+  # Group the data by pre or post target_year
+  group_by(pre_post) %>%
+    # Count the number of records for each species (puts in column n)
+    count(scientificName) %>%
+  ungroup() 
+```
+
+```{r view_2}
+head(shark_gg_df, 3)
+tail(shark_gg_df, 3)
+```
+
+---
+
+# Make into "wide" format for ggplot
+
+```{r pre_post_prep_3, echo=TRUE}
+shark_gg_df <- shark_gg_df %>%
+  # Columns scientificName, pre (count), post(count)
+  spread(pre_post, n)
+```
+
+```{r view_3}
+head(shark_gg_df, 3)
+```
+
+---
+
+# Approximate slope for comparison line
+
+Not at all accurate! Survey effort varied a lot by year.
+
+```{r slope, echo=TRUE}
+# Calculate slope of comparison line by how many years either side of target_year
+# (approximation - takes no account of survey effort)
+slope <- length(which(unique(shark_df$year) > target_year)) / 
+  length(which(unique(shark_df$year) <= target_year))
+```
+
+---
+
+# Comparing number of records pre and post end 1992
+
+```{r scatterplot_code, echo = TRUE}
+shark_scatter_gg <- shark_gg_df %>%
+  ggplot(aes(x = pre, y = post)) +
+    # Comparison line to show equality of observations given the number of years
+    geom_abline(slope = slope, intercept = 0, col = "grey75", size = 1) +
+    # Scatterplot of data
+    geom_point(alpha = 0.5, col = prof_colours[2]) +
+    # Human-readable axis labels
+    labs(x = paste("Number of observations pre", target_year),
+         y = paste("Number of observations from", target_year, "on"))
+```
+
+---
+
+# What don't we see?
+
+```{r scatterplot, fig.height = 6.5, fig.width = 8}
+shark_nomissing_gg <- shark_scatter_gg +
+  theme(
+      axis.text = element_text(size = 18),
+      axis.title = element_text(size = 22),
+      legend.text = element_text(size = 18),
+      legend.title = element_text(size = 22)
+  )
+
+shark_nomissing_gg
+```
+
+---
+
+# So I found this tool 
+
+```{r naniar_code, echo = TRUE}
+shark_missing_gg <- shark_gg_df %>%
+  ggplot(aes(x = pre, y = post)) +
+    # Comparison line to show equality of observations given the number of years
+    geom_abline(slope = slope, intercept = 0, col = "grey75", size = 1.5) +
+    # Scatterplot of data
+   {{naniar::geom_miss_point(alpha = 0.5, size = 3)}} +
+    # Set my own discrete colour scheme
+   {{scale_colour_manual(values = prof_colours,
+                        # Change legend header
+                        guide = guide_legend("Presence"),
+                        # Change key labels from "Not missing" and "Missing"
+                        labels = c("Absent", "Present"))}} +
+    # Human-readable axis labels
+    labs(x = paste("Number of observations pre", target_year),
+         y = paste("Number of observations from", target_year, "on"))
+```
+
+---
+
+# Colonisation and extinction
+
+```{r missingplot, fig.height = 10, fig.width = 15}
+shark_missing_gg
+```
+
+---
+
+# Let's label some interesting points
+
+```{r make_labels_fail}
+# Which points should be labelled automatically?
+shark_present_df <- shark_gg_df %>%
+  # Species of interest
+  dplyr::filter(scientificName == species | 
+        # Successful post-target_year
+        (pre > 150 & pre > post) | 
+        # Strong decline post-target_year from high base
+        (post > 500 & (post / pre) > 15))
+
+# Particularly noticeable extinction and colonisation points
+shark_absent_df <- shark_gg_df %>%
+  # Only want observations where either pre or post are missing
+  dplyr::filter(!complete.cases(pre, post)) %>%
+  # Thresholds determined by eye
+  dplyr::filter(pre > 35 | post > 500) 
+
+shark_labels_df <- dplyr::bind_rows(shark_present_df, shark_absent_df)
+```
+
+```{r label-fail, echo = TRUE}
+shark_label_gg <- shark_missing_gg +
+    # Colour my target species
+    # gghighlight doesn't work with geom_miss_point, do it manually
+   {{geom_point(data = dplyr::filter(shark_gg_df, scientificName == species), 
+      col = highlight_colour, size = 3)}} +
+    # Label all species of interest with ggrepel
+    # ggrepel stops your text labels overlapping
+   {{ggrepel::geom_text_repel(data = shark_labels_df,
+      aes(label = scientificName),
+      # Avoids ambiguity - moving the labels away from the points means
+      # it will make a short line from the label to the exact point
+      nudge_x = 15, nudge_y = 15,
+      size = 9, segment.size = 0.75, point.padding = 0.75)}}
+```
+
+---
+
+# Well, darnit
+
+```{r labelfail, fig.height = 9, fig.width = 15}
+shark_label_gg
+```
+
+---
+
+# So this is OK
+
+I can label the points where the species was present throughout:
+
+```{r label-works, echo = TRUE}
+shark_label_gg <- shark_missing_gg +
+    # Colour my target species
+    geom_point(data = dplyr::filter(shark_gg_df, scientificName == species), 
+      col = highlight_colour, size = 3) +
+    # ggrepel only works for non-missing data; label species of interest
+   {{ggrepel::geom_text_repel(data = shark_present_df,
+      aes(label = scientificName),
+      # Avoids ambiguity or overlapping with manual labels 
+      nudge_x = 22, 
+      nudge_y = ifelse(shark_present_df$scientificName == species, 0, 15), 
+      # Point padding stops lines obscuring points
+      size = 9, segment.size = 0.75, point.padding = 0.75)}}
+```
+
+But I still want to label those missing data. How?
+
+---
+
+# Brute force and ignorance
+
+```{r label_missing, echo=TRUE}
+# Manually label species once common but now missing or vice-versa
+for (i in 1:nrow(shark_absent_df)) {
+  # Colonisers
+  if (is.na(shark_absent_df[i,]$pre)) {
+    shark_label_gg <- shark_label_gg +
+      # Add custom annotation at calculated location
+      # Using the length of the string as annotate puts the middle
+      # of the text at the given location
+     {{annotate("text", 
+               x = (nchar(shark_absent_df[i,]$scientificName) * 2) - 12,
+               y = shark_absent_df[i,]$post + 70,
+               size = 9,
+               label = shark_absent_df[i,]$scientificName)}}
+  } else {
+    # Went extinct
+    shark_label_gg <- shark_label_gg +
+      # Add custom annotation at calculated location
+     {{annotate("text", x = shark_absent_df[i,]$pre +
+               (nchar(shark_absent_df[i,]$scientificName) * 2) + 25, 
+               y = ifelse(shark_absent_df[i,]$pre < 50, -210, -110), 
+               size = 9,
+               label = shark_absent_df[i,]$scientificName)}} 
+  }
+}
+```
+
+---
+
+# Success! But surely there's a better way?
+
+```{r clunky, fig.height = 10, fig.width = 15}
+shark_label_gg
+```
+
+---
+
+# You're right
+
+Those `NA`s are graphed as though they were negative values.
+
+```{r better_labels, echo = TRUE}
+shark_labels_df <- shark_absent_df %>%
+  # Replace all the NA values in the pre and post columns
+  # This will be a bit approximate because of jitter
+  tidyr::replace_na(list(pre = -35, post = -175)) %>%
+  # Glue all the labels together, because now they will all work with ggrepel
+  bind_rows(shark_present_df)
+
+```
+
+Now we don't need all that `annotate` stuff.
+
+---
+
+# The better way
+
+I can just add all the labels at once now, and `ggrepel` can take care of where
+they go.
+
+```{r final_code, echo = TRUE}
+shark_label_gg <- shark_missing_gg +
+    # Colour my target species
+    geom_point(data = dplyr::filter(shark_gg_df, scientificName == species), 
+      col = highlight_colour, size = 3) +
+    # ggrepel only works for non-missing data; label species of interest
+   {{ggrepel::geom_text_repel(data = shark_labels_df,
+      aes(label = scientificName),
+      # Avoids ambiguity or overlapping with manual labels 
+      nudge_x = 22, 
+      nudge_y = 15, 
+      # Point padding stops lines obscuring points
+      size = 9, segment.size = 0.75, point.padding = 0.75)}}
+```
+
+---
+
+# And here we are
+
+```{r final, fig.height = 10, fig.width = 15}
+shark_label_gg
+```
+
+---
+
+# So why did I show you annotate then?
+
+Useful when:
+
+- Only one or two things to add
+
+- Information in vectors not dataframes
+
+- Segments, rectangles and even point ranges as well as text
+
+- You're finicky about position
+
+- If the position is `inside` the axes
+
+<br>
+Not useful for:
+
+- Custom axis ticks (possible, but arcane)
+
+
