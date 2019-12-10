@@ -44,8 +44,9 @@ We're a friendly bunch and you can make the role as large as you want. It could 
 # Meetup Attendance
 ```{r attendance, echo = FALSE}
 attendee_plot <- fortify(timeseries_counts) %>%
-   ggplot(aes(x = Date, y = Attendee.count, group = 1))+   
-  geom_line() +
+   ggplot(aes(x = Date, y = Attendee.count, group = 1), colour="#88398a")+   
+  geom_line(colour="#88398a") +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 50))+
   xlab("Date") +
   ylab("") +
   theme_classic()+
@@ -60,7 +61,8 @@ print(attendee_plot)
 
 pizza_plot <- fortify(timeseries_counts) %>%
    ggplot(aes(x = Date, y = Pizza.count, group = 1))+   
-  geom_line() +
+  geom_line(colour="#88398a") +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 14)) +
   xlab("Date") +
   ylab("") +
   theme_classic()+
